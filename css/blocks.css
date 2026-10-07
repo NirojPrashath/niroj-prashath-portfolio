@@ -183,7 +183,7 @@
 
 .work-card:hover .work-card__sheen { transform: translateX(45%); opacity: 1; }
 
-/* screenshot slot: the top of the real build, framed */
+/* project screen slot: the top of the real build, framed */
 .work-card__media {
   position: relative;
   border-radius: calc(var(--r-l) - 8px);
@@ -211,7 +211,17 @@
   background: linear-gradient(0deg, rgba(8, 7, 10, 0.5), rgba(8, 7, 10, 0) 46%);
 }
 
-.work-card__tag { position: absolute; left: 0.7rem; bottom: 0.7rem; z-index: 2; }
+/* project name sits on the image — a label, not the word "screenshot" */
+.work-card__tag {
+  position: absolute;
+  left: 0.7rem;
+  bottom: 0.7rem;
+  z-index: 2;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background-color: rgba(8, 7, 10, 0.6);
+}
 
 .work-card__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .work-card__idx {
@@ -248,7 +258,7 @@
 .work-card__meta,
 .work-card__foot { padding-inline: clamp(0.4rem, 0.2rem + 0.6vw, 0.7rem); }
 
-/* concept motif for work with no screenshots */
+/* concept motif for work with no product screen */
 .work-card__media--motif {
   display: grid;
   place-items: center;
