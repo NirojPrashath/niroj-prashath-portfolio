@@ -38,10 +38,22 @@
   }
 
   /* ======================================================= progressive load */
+  /**
+   * Frame stream with a memory budget.
+   *
+   * The starter loads all 300 frames; fine on a desktop, fatal on iOS Safari
+   * where the decoded bitmaps blow the per-tab memory limit and the page is
+   * killed ("A problem repeatedly occurred"). So the same 300-step scroll now
+   * maps onto a *plan* of frames: maxFrames is the budget and frames are
+   * sampled evenly across the sequence. nearest() still resolves to the closest
+   * decoded frame, so the scrub never shows a blank canvas.
+   */
   function createSequence(opts) {
     const count = opts.count;
     const stride = Math.max(1, opts.stride || 1);
     const concurrency = opts.concurrency || 6;
+    const maxFrames = Math.max(2, Math.min(count, opts.maxFrames || count));
+    const step = Math.max(1, Math.ceil(count / maxFrames));
     const images = new Array(count);      // images[i] === frame i+1, as in the starter
     const flags = new Uint8Array(count);
     let started = false;
@@ -66,8 +78,12 @@
 
     function buildQueue() {
       const q = [];
-      for (let i = 0; i < count; i += stride) q.push(i);          // coarse pass first
-      for (let i = 0; i < count; i++) if (i % stride !== 0) q.push(i);
+      if (step === 1) {
+        for (let i = 0; i < count; i += stride) q.push(i);        // coarse pass first
+        for (let i = 0; i < count; i++) if (i % stride !== 0) q.push(i);
+        return q;
+      }
+      for (let i = 0; i < count; i += step) q.push(i);            // even sample inside the budget
       return q;
     }
 
@@ -98,7 +114,10 @@
     return {
       count: count,
       stride: stride,
+      step: step,
       start: start,
+      /** how many frames this device will actually load — the loader reads this */
+      planSize: function () { return Math.ceil(count / step); },
       get: function (i) { return flags[i] === 1 ? images[i] : null; },
       nearest: nearest,
       isLoaded: function (i) { return flags[i] === 1; },
@@ -196,11 +215,53 @@
     return 1;
   }
 
+  /** smaller side of the viewport — phones ~390, iPads 768–1024, desktops more */
+  function viewWidth() {
+    return Math.min(window.innerWidth, window.screen ? window.screen.width : window.innerWidth);
+  }
+
+  /**
+   * How many frames this device may hold in memory.
+   * navigator.deviceMemory does not exist in Safari, so width / pointer type
+   * carry the decision there. Save-Data wins over everything.
+   */
+  function frameBudget() {
+    const conn = navigator.connection || {};
+    const mem = navigator.deviceMemory || 0;
+    const cores = navigator.hardwareConcurrency || 4;
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    const w = viewWidth();
+
+    if (conn.saveData) return 40;                            // visitor asked for less data
+    if (mem && mem <= 2) return 40;                          // very low-RAM Android
+    if (w <= 720) return 72;                                 // phones
+    if (w <= 1080 || coarse || cores <= 4) return 120;       // tablets / small laptops
+    return 300;                                              // desktop — unchanged
+  }
+
+  /** canvas raster: match the pixels actually drawn, not the source frame size */
+  function renderRaster(native) {
+    const W = (native && native.nativeWidth) || 1920;
+    const H = (native && native.nativeHeight) || 1080;
+    const w = viewWidth();
+    const k = w <= 720 ? 0.5 : w <= 1080 ? 0.6667 : 1;       // 960x540 / 1280x720 / native
+    return { width: Math.round(W * k), height: Math.round(H * k) };
+  }
+
+  /** decode a few at a time on phones, more on desktop */
+  function loadConcurrency() {
+    const w = viewWidth();
+    return w <= 720 ? 3 : w <= 1080 ? 4 : 6;
+  }
+
   NP.seq = {
     createSequence: createSequence,
     createHeroCanvas: createHeroCanvas,
     framePath: framePath,
     prefersReduced: prefersReduced,
-    deviceStride: deviceStride
+    deviceStride: deviceStride,
+    frameBudget: frameBudget,
+    renderRaster: renderRaster,
+    loadConcurrency: loadConcurrency
   };
 })(window.NP = window.NP || {});
