@@ -1,13 +1,13 @@
 /* ==========================================================================
    NP / blocks.css
    Section components: about, credentials, work cards, skills, workflow,
-   contact. Same structure as before — re-skinned onto the new design system
+   contact. Same structure as before, re-skinned onto the new design system
    (white type, orange numerals, refined glass, hairline rules).
    ========================================================================== */
 
 /* ================================================================== about */
 /* One wide panel: the portrait is gone, so the copy gets the full measure,
-   a real padding box, and a refined glass skin — more tint and a capped
+   a real padding box, and a refined glass skin, more tint and a capped
    blur, with the depth coming from layered highlights and a soft shadow
    instead of haze. */
 .about {
@@ -24,18 +24,9 @@
   gap: clamp(1.5rem, 1rem + 2.4vw, 3rem);
   align-items: start;
   padding: clamp(1.6rem, 1.05rem + 2.6vw, 3rem);
+  /* thickness + geometry only, the surface recipe itself comes from the
+     single reusable .glass component in base.css, unused here on purpose */
   border-radius: var(--r-xl);
-  /* controlled transparency: more tint than the generic .glass, less blur */
-  background-color: rgba(13, 10, 14, 0.72);
-  -webkit-backdrop-filter: blur(9px) saturate(118%);
-  backdrop-filter: blur(9px) saturate(118%);
-  border-color: var(--glass-line);
-  box-shadow:
-    inset 0 1px 0 var(--glass-hi),                    /* light on the top edge */
-    inset 0 -1px 0 var(--glass-lo),                   /* thickness at the base */
-    inset 0 60px 90px -70px rgba(255, 122, 61, 0.16), /* warm bloom inside */
-    0 28px 64px -38px rgba(0, 0, 0, 0.78),            /* soft, wide, low shadow */
-    var(--shadow-1);
 }
 
 /* narrative column: a readable measure, flush left, never the panel's width */
@@ -74,19 +65,6 @@
   background: #4ADE9B;
   flex: none;
   box-shadow: 0 0 0 4px rgba(74, 222, 155, 0.14);
-}
-
-/* the local overrides must not defeat the accessibility fallbacks */
-@supports not ((backdrop-filter: blur(6px)) or (-webkit-backdrop-filter: blur(6px))) {
-  .about__body { background-color: rgba(13, 10, 15, 0.95); }
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  .about__body {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    background-color: rgba(13, 10, 15, 0.97);
-  }
 }
 
 /* =========================================================== credentials */
@@ -183,7 +161,7 @@
 
 .work-card:hover .work-card__sheen { transform: translateX(45%); opacity: 1; }
 
-/* project screen slot: the top of the real build, framed */
+/* project screen: the top of the real build, framed */
 .work-card__media {
   position: relative;
   border-radius: calc(var(--r-l) - 8px);
@@ -211,17 +189,7 @@
   background: linear-gradient(0deg, rgba(8, 7, 10, 0.5), rgba(8, 7, 10, 0) 46%);
 }
 
-/* project name sits on the image — a label, not the word "screenshot" */
-.work-card__tag {
-  position: absolute;
-  left: 0.7rem;
-  bottom: 0.7rem;
-  z-index: 2;
-  font-size: 0.62rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  background-color: rgba(8, 7, 10, 0.6);
-}
+.work-card__tag { position: absolute; left: 0.7rem; bottom: 0.7rem; z-index: 2; }
 
 .work-card__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .work-card__idx {
@@ -258,7 +226,7 @@
 .work-card__meta,
 .work-card__foot { padding-inline: clamp(0.4rem, 0.2rem + 0.6vw, 0.7rem); }
 
-/* concept motif for work with no product screen */
+/* concept motif for work with no project screens */
 .work-card__media--motif {
   display: grid;
   place-items: center;
@@ -535,7 +503,7 @@
   .flow__jump { padding: 0.6rem 0.7rem; }
 
   /* keep contact values (long emails / URLs) on a single line instead of
-     wrapping mid-word — the row gets tighter padding and a slightly
+     wrapping mid-word, the row gets tighter padding and a slightly
      smaller value size rather than breaking "@gmail" / ".com" apart */
   .contact { padding: 1.15rem; }
   .contact__item { gap: 0.62rem; padding: 0.72rem; }
