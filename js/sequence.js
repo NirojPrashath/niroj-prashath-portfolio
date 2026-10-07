@@ -23,6 +23,9 @@
       smooth on slow connections. Frame names, order and indexing are identical.
    2. `requestAnimationFrame(render)` is guarded so a burst of scroll events
       queues one paint, not dozens. Same frame on screen, less work.
+   3. On phones and tablets each decoded frame is shrunk to a 960x540 scratch
+      canvas and the full size Image is dropped, so the device holds ~2 MB per
+      frame instead of ~5.5 MB. Same picture on screen, a third of the memory.
 
    The canvas is fixed, full-viewport and scrubs from the top of the page to the
    bottom of the page, exactly like the starter.
@@ -56,16 +59,34 @@
     const step = Math.max(1, Math.ceil(count / maxFrames));
     const images = new Array(count);      // images[i] === frame i+1, as in the starter
     const flags = new Uint8Array(count);
+    /* Frames are 1600x900: about 5.5 MB decoded each. On phones and tablets the
+       canvas never draws them that large, so each one is copied into a 960x540
+       scratch canvas and the full size Image is dropped, which is what keeps an
+       iPhone from running out of memory mid scroll. Desktops are left alone. */
+    const shrink = opts.shrink || (viewWidth() <= 1080 ? { width: 960, height: 540 } : null);
     let started = false;
     let loaded = 0;
     let queue = [];
+
+    /** copy a decoded frame down to the scratch size and let the big one go */
+    function shrinkFrame(img) {
+      const c = document.createElement("canvas");
+      c.width = shrink.width;
+      c.height = shrink.height;
+      c.getContext("2d").drawImage(img, 0, 0, shrink.width, shrink.height);
+      /* hand the full size bitmap back to the browser straight away */
+      img.onload = null;
+      img.onerror = null;
+      img.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+      return c;
+    }
 
     function loadOne(i) {
       return new Promise(function (resolve) {
         const img = new Image();
         img.decoding = "async";
         img.onload = function () {
-          images[i] = img;
+          images[i] = shrink ? shrinkFrame(img) : img;
           flags[i] = 1;
           loaded++;
           if (opts.onLoad) opts.onLoad(i, loaded);
