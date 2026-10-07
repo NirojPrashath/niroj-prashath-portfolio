@@ -1,6 +1,6 @@
 /* ==========================================================================
    NP / projects.css
-   Projects page: masthead, numbered toolbar, case studies with screenshot
+   Projects page: masthead, numbered toolbar, case studies with project screens
    bands, supporting cast. Re-skinned onto the new system (white type, orange
    numerals, refined glass, hairline rules).
    ========================================================================== */
@@ -162,7 +162,7 @@
 .case:hover { border-color: var(--line-2); }
 .case.is-hidden { display: none; }
 
-/* screenshot band, spanning the full width of the case card */
+/* project screen band, spanning the full width of the case card */
 .case__media {
   grid-column: 1 / -1;
   position: relative;
@@ -411,4 +411,9 @@
   .cast { grid-template-columns: minmax(0, 1fr); }
   .proj-head__facts { grid-template-columns: minmax(0, 1fr); gap: 0.9rem; }
   .case__idx { font-size: 1.35rem; }
+}
+
+/* Tablets: keep the filter toolbar pinned (it went static below 960px) */
+@media (min-width: 821px) and (max-width: 960px) {
+  .toolbar { position: sticky; top: var(--header-h); }
 }
