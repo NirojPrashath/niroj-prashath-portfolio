@@ -29,7 +29,7 @@
     const body = document.body;
     if (!el) { body.classList.remove("is-loading"); return; }
 
-    const total = (NP.sequence && NP.sequence.count) || 300;
+    const total = (sequenceRef && sequenceRef.planSize()) || (NP.sequence && NP.sequence.count) || 300;
     const countEl = $(".loader__count b", el);
     const totalEl = $(".loader__count i", el);
 
@@ -131,8 +131,11 @@
       sheet.setAttribute("aria-hidden", String(!open));
       document.body.classList.toggle("is-locked", open);
       if (open) {
-        const first = $(".sheet__link", sheet);
-        if (first) first.focus({ preventScroll: true });
+        /* Focus the panel itself, not the first link: iOS paints a ring on a
+           focused link the moment the menu opens, which reads as a stray
+           selection box. Keyboard users still get a ring when they Tab. */
+        if (!sheet.hasAttribute("tabindex")) sheet.setAttribute("tabindex", "-1");
+        sheet.focus({ preventScroll: true });
       }
     }
 
@@ -150,7 +153,7 @@
     });
 
     window.addEventListener("resize", function () {
-      if (window.innerWidth > 960 && sheet.classList.contains("is-open")) set(false);
+      if (window.innerWidth > 820 && sheet.classList.contains("is-open")) set(false);
     });
   }
 
@@ -280,6 +283,15 @@
       if (!raf) raf = requestAnimationFrame(loop);
     }, { passive: true });
 
+    /* don't burn a frame loop (or battery) while the tab is in the background */
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden && raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+        light.classList.remove("is-on");
+      }
+    });
+
     document.addEventListener("mouseleave", () => light.classList.remove("is-on"));
   }
 
@@ -293,13 +305,16 @@
     if (!canvas) return;
 
     const seqCfg = NP.sequence;
+    const budget = S.frameBudget();
+    const raster = S.renderRaster(seqCfg);
     const sequence = S.createSequence({
       count: seqCfg.count,
       path: seqCfg.path,
       ext: seqCfg.ext,
       pad: seqCfg.pad,
       stride: reduced ? 8 : S.deviceStride(),
-      concurrency: 6
+      maxFrames: reduced ? Math.min(budget, 40) : budget,
+      concurrency: S.loadConcurrency()
     });
 
     sequenceRef = sequence;
@@ -323,8 +338,8 @@
       canvas: canvas,
       sequence: sequence,
       frameCount: seqCfg.count,
-      nativeWidth: seqCfg.nativeWidth,
-      nativeHeight: seqCfg.nativeHeight,
+      nativeWidth: raster.width,
+      nativeHeight: raster.height,
       onProgress: function (fraction, frame) {
         setHud(frame, fraction);
         // Scrim: strongest at the top where the headline sits, easing back as the
@@ -473,6 +488,7 @@
 
   /* ======================================================= 10. boot it all */
   function boot() {
+    bootSequence();          /* the frame budget must exist before the loader reads it */
     bootLoader();
 
     if (page === "projects") renderProjects();
@@ -484,7 +500,6 @@
     bootReveals();
     bootCounters();
     bootCursor();
-    bootSequence();
 
     if (page === "projects") bootProjects();
     else bootFlow();
