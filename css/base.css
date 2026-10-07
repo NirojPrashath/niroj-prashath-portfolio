@@ -159,6 +159,18 @@ input, textarea, select { font: inherit; color: inherit; }
   border-radius: 4px;
 }
 
+/* The ring above is right for keyboard use — it is the ring iOS paints on a
+   script-focused menu link (opening the burger) that reads as a stray selection
+   box. The sheet now focuses the panel instead of the first link; these rules
+   keep the ring tidy when a keyboard visitor really does Tab into the menu. */
+.sheet:focus { outline: none; }
+.sheet__link:focus-visible { outline-offset: -2px; border-radius: var(--r-s); }
+
+/* Touch devices: no focus ring at all — there is no keyboard to serve. */
+@media (pointer: coarse) {
+  :focus-visible { outline: none; }
+}
+
 /* ---------------------------------------------------------------- typography */
 h1, h2, h3, h4 {
   font-family: var(--font-display);
