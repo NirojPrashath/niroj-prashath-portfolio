@@ -5,9 +5,54 @@
    capability marquee, footer, frame HUD.
    ========================================================================== */
 
+/* ======================================================== projects bg field
+   The projects page runs no avatar, so it gets its own atmosphere: a deep
+   base, a slow aurora in the project palette, a fine grain and a vignette.
+   Built from the same tokens as the home page, so it still reads as one site. */
+.bg-field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--ink-0);
+}
+
+.bg-field__aurora {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(38% 34% at 18% 6%, rgba(255, 92, 26, 0.32), rgba(255, 92, 26, 0) 68%),
+    radial-gradient(42% 40% at 86% 18%, rgba(179, 36, 111, 0.36), rgba(179, 36, 111, 0) 70%),
+    radial-gradient(50% 40% at 8% 52%, rgba(179, 36, 111, 0.22), rgba(179, 36, 111, 0) 72%),
+    radial-gradient(46% 38% at 78% 62%, rgba(255, 92, 26, 0.20), rgba(255, 92, 26, 0) 72%),
+    radial-gradient(52% 46% at 58% 96%, rgba(226, 58, 47, 0.26), rgba(226, 58, 47, 0) 74%),
+    linear-gradient(180deg, #0A0709 0%, #09080B 42%, #0C080D 100%);
+  filter: blur(6px) saturate(118%);
+}
+
+.bg-field__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.16;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* a vignette + a hairline horizon keep the wide page from feeling flat */
+.bg-field::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(130% 90% at 50% 0%, rgba(8, 7, 10, 0) 52%, rgba(8, 7, 10, 0.48) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 26%);
+}
+
+body[data-page="projects"] main { position: relative; z-index: 3; }
+
 /* ============================================================ page shell */
 /* The content column has to be a positioned layer, otherwise it paints in the
-   static flow — i.e. *under* the fixed scrim (z-index 2) — and every section
+   static flow, i.e. *under* the fixed scrim (z-index 2), and every section
    ends up washed out by the atmosphere pass (and hidden outright when the
    frame stream fails and the fallback scrim goes opaque). */
 main {
@@ -18,7 +63,7 @@ main {
 /* ============================================================= boot loader
    The reference portfolio's preloader, re-skinned to this design system:
    the same full-cover field of black + bloom, the name ghosted on line one
-   and lit in the accent on line two, and a 2px hairline meter underneath —
+   and lit in the accent on line two, and a 2px hairline meter underneath -
    here driven by the real frame stream instead of a fixed timer. */
 .loader {
   position: fixed;
@@ -134,6 +179,10 @@ main {
 
 body.is-loading { overflow: hidden; }
 
+/* no frame stream on this page: the meter is a short brand beat, so the
+   counting readout is hidden rather than reporting a fake number */
+body.no-frames .loader__read { visibility: hidden; }
+
 /* hand-off: the shell unlocks and the hero type rises, as in the reference */
 body.is-loaded .hero__title > span { animation: hero-line 900ms var(--ease-out) both; }
 body.is-loaded .hero__title > span:nth-child(2) { animation-delay: 120ms; }
@@ -155,7 +204,6 @@ body.is-loaded .hero__title > span:nth-child(2) { animation-delay: 120ms; }
   left: 0;
   width: 100vw;
   height: 100vh;
-  height: 100dvh;          /* iOS: 100vh is the toolbar-hidden viewport */
   object-fit: cover;
   display: block;
   z-index: 0;
@@ -199,6 +247,51 @@ body.no-seq .scrim {
   background:
     radial-gradient(120% 90% at 50% 0%, rgba(255, 92, 26, 0.14), rgba(8, 7, 10, 0) 60%),
     var(--ink-0);
+}
+
+/* ============================================================ ground bands
+   Sections marked .section--ground sit on their own opaque ground. Used on the
+   home page so the animated avatar is not visible behind Experience &
+   education / Industry internship, the band feathers into the scene top and
+   bottom, so it still reads as part of the same page. */
+.section--ground { position: relative; isolation: isolate; }
+
+/* pooled light sitting directly behind the card row, so each glass card has
+   colour and structure to refract, placed by the grid, not by a magic % */
+.section--ground .cred-grid { position: relative; }
+.section--ground .cred-grid::before {
+  content: "";
+  position: absolute;
+  inset: -3.5rem -2rem;
+  z-index: -1;
+  background:
+    radial-gradient(38% 78% at 22% 52%, rgba(255, 122, 61, 0.30), rgba(255, 122, 61, 0) 72%),
+    radial-gradient(42% 82% at 74% 44%, rgba(179, 36, 111, 0.34), rgba(179, 36, 111, 0) 74%),
+    radial-gradient(30% 60% at 50% 88%, rgba(226, 58, 47, 0.22), rgba(226, 58, 47, 0) 76%);
+  filter: blur(26px);
+  pointer-events: none;
+}
+
+.section--ground::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -7vh;
+  bottom: -7vh;
+  left: calc(50% - 50vw);
+  width: 100vw;
+  background:
+    /* light pooled behind the card row, so the glass has something to refract */
+    radial-gradient(42% 30% at 26% 72%, rgba(255, 122, 61, 0.20), rgba(255, 122, 61, 0) 70%),
+    radial-gradient(46% 32% at 76% 66%, rgba(179, 36, 111, 0.26), rgba(179, 36, 111, 0) 72%),
+    radial-gradient(60% 46% at 18% 14%, rgba(179, 36, 111, 0.18), rgba(179, 36, 111, 0) 70%),
+    radial-gradient(54% 46% at 88% 88%, rgba(255, 92, 26, 0.14), rgba(255, 92, 26, 0) 72%),
+    linear-gradient(180deg,
+      rgba(8, 7, 10, 0) 0%,
+      var(--ink-0) 9%,
+      var(--ink-0) 91%,
+      rgba(8, 7, 10, 0) 100%);
+  pointer-events: none;
 }
 
 /* ======================================================== scroll progress */
@@ -334,7 +427,7 @@ body.seq-ready .hud { opacity: 1; transform: none; }
   justify-content: space-between;
 }
 
-/* brand — wordmark first, like the reference */
+/* brand, wordmark first, like the reference */
 .brand {
   display: inline-flex;
   align-items: center;
@@ -497,7 +590,7 @@ body.seq-ready .hud { opacity: 1; transform: none; }
   letter-spacing: -0.04em;
 }
 
-/* menu rows carry an arrow, not a number — the numerals stay reserved for
+/* menu rows carry an arrow, not a number, the numerals stay reserved for
    section labels (01 About … 06 Contact) and case indexes (#01 …) */
 .sheet__arrow {
   font-family: var(--font-body);
@@ -551,7 +644,7 @@ body.seq-ready .hud { opacity: 1; transform: none; }
   margin-top: 0.42em;
 }
 
-/* right column: bold statement, then a quiet paragraph — as in the reference */
+/* right column: bold statement, then a quiet paragraph, as in the reference */
 .hero__aside { display: grid; gap: 1.1rem; align-content: end; padding-bottom: 0.4rem; }
 
 .hero__statement {
@@ -601,7 +694,7 @@ body.seq-ready .hud { opacity: 1; transform: none; }
   color: var(--dim);
 }
 
-/* numbered capability strip — the reference's bottom row ------------------ */
+/* numbered capability strip, the reference's bottom row ------------------ */
 .caps {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -814,44 +907,8 @@ body.seq-ready .hud { opacity: 1; transform: none; }
   .hud__bar { width: 38px; }
   .hud__label { display: none; }
   .site-foot__grid { grid-template-columns: minmax(0, 1fr); }
-
-  /* menu sheet: compact, designed rows instead of five oversize lines */
-  .sheet {
-    gap: 0;
-    padding-top: max(calc(var(--header-h) + 1.1rem), env(safe-area-inset-top));
-    padding-bottom: max(2rem, env(safe-area-inset-bottom));
-  }
-  .sheet__link { font-size: 1.28rem; padding: 0.82rem 0.2rem; letter-spacing: -0.025em; }
-  .sheet__arrow { font-size: 0.95rem; }
-  .sheet__foot { margin-top: 1.1rem; gap: 0.6rem; }
-
-  .hud { font-size: 0.62rem; }
 }
 
 @media (max-height: 480px) and (orientation: landscape) {
   .hud { display: none; }
-}
-
-/* ------------------------------------------------ touch / small-screen cost
-   Blur on the layers that sit over the moving canvas is the most expensive
-   thing on a phone GPU, and it feeds the memory pressure behind iOS's
-   "A problem repeatedly occurred". Tap targets go to 44px. */
-@media (max-width: 720px), (pointer: coarse) {
-  .site-head, .sheet, .hud {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-  .site-head { background-color: rgba(9, 7, 10, 0.88); }
-  .sheet { background-color: rgba(9, 7, 10, 0.97); }
-  .hud { background-color: rgba(12, 9, 12, 0.78); }
-
-  .nav__link { min-height: 44px; display: inline-flex; align-items: center; }
-  .burger { width: 44px; height: 44px; }
-}
-
-/* Tablets: an iPad portrait is 768–834 wide and has room for the full nav */
-@media (min-width: 821px) and (max-width: 960px) {
-  .nav { display: flex; }
-  .head-status { display: none; }
-  .burger { display: none; }
 }
