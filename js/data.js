@@ -145,9 +145,10 @@ window.NP = (function () {
       id: "project-01",
       idx: "01",
       title: "RAASTA",
-      image: null,          // concept - no screenshots captured
+      short: "RAASTA",
+      image: null,          // concept - no product screens to capture
       imageAlt: null,
-      motif: "route",       // drawn motif stands in for a screenshot
+      motif: "route",       // drawn motif stands in for a product screen
       category: "Mobility · Android + web · Concept",
       filters: ["mobile", "web"],
       context: "Google Fund My Crazy · 2026",
@@ -182,6 +183,7 @@ window.NP = (function () {
       id: "project-02",
       idx: "02",
       title: "Iron Tide",
+      short: "Iron Tide",
       image: "assets/img/projects/iron-tide-wide.jpg",
       imageCard: "assets/img/projects/iron-tide-card.jpg",
       imageAlt:
@@ -219,6 +221,7 @@ window.NP = (function () {
       id: "project-03",
       idx: "03",
       title: "Knuckles Roasters",
+      short: "Knuckles",
       image: "assets/img/projects/knuckles-roasters-wide.jpg",
       imageCard: "assets/img/projects/knuckles-roasters-card.jpg",
       imageAlt:
@@ -257,6 +260,7 @@ window.NP = (function () {
       id: "project-04",
       idx: "04",
       title: "B-Ceylon",
+      short: "B-Ceylon",
       image: "assets/img/projects/b-ceylon-wide.jpg",
       imageCard: "assets/img/projects/b-ceylon-card.jpg",
       imageAlt:
@@ -294,6 +298,7 @@ window.NP = (function () {
       id: "project-05",
       idx: "05",
       title: "Vet Lanka Animal Hospital",
+      short: "Vet Lanka",
       image: "assets/img/projects/vet-lanka-wide.jpg",
       imageCard: "assets/img/projects/vet-lanka-card.jpg",
       imageAlt:
@@ -330,6 +335,7 @@ window.NP = (function () {
       id: "project-06",
       idx: "06",
       title: "Wayfarer",
+      short: "Wayfarer",
       image: "assets/img/projects/wayfarer-wide.jpg",
       imageCard: "assets/img/projects/wayfarer-card.jpg",
       imageAlt:
