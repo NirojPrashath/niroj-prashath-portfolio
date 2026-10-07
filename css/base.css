@@ -1,5 +1,5 @@
 /* ==========================================================================
-   NP / base.css — design system
+   NP / base.css, design system
    Direction: near-black cinematic base, magenta→red atmospheric bloom,
    a single warm orange accent, heavy geometric display type, hairline rules
    and refined physical-glass surfaces.
@@ -159,18 +159,6 @@ input, textarea, select { font: inherit; color: inherit; }
   border-radius: 4px;
 }
 
-/* The ring above is right for keyboard use — it is the ring iOS paints on a
-   script-focused menu link (opening the burger) that reads as a stray selection
-   box. The sheet now focuses the panel instead of the first link; these rules
-   keep the ring tidy when a keyboard visitor really does Tab into the menu. */
-.sheet:focus { outline: none; }
-.sheet__link:focus-visible { outline-offset: -2px; border-radius: var(--r-s); }
-
-/* Touch devices: no focus ring at all — there is no keyboard to serve. */
-@media (pointer: coarse) {
-  :focus-visible { outline: none; }
-}
-
 /* ---------------------------------------------------------------- typography */
 h1, h2, h3, h4 {
   font-family: var(--font-display);
@@ -219,7 +207,7 @@ p { text-wrap: pretty; }
 }
 
 /* section labels keep the mono/upper treatment but in white-dim, with the
-   index in the accent — the numbered rhythm the reference establishes */
+   index in the accent, the numbered rhythm the reference establishes */
 .label {
   display: inline-flex;
   align-items: baseline;
@@ -296,51 +284,135 @@ p { text-wrap: pretty; }
 
 /* =============================================================== glass */
 /**
- * Physical-glass surface. Layers, in order:
- *   1. tint                (semi-opaque, never near-transparent)
- *   2. capped backdrop blur (subtle — depth, not haze)
- *   3. inner top highlight  (light catching the top edge)
- *   4. inner bottom weight  (thickness)
- *   5. diagonal specular sheen (::before)
- *   6. hairline edge + 1px gradient rim (--edge)
+ * LIQUID GLASS, one card surface, used by every card on both pages.
+ *
+ * Modelled on tempered privacy glass: a milky, faintly cool slab that sits
+ * *over* the scene rather than in it. The backdrop stays visible through it,
+ * but softened and reduced in clarity, never a clear window, never a flat
+ * transparent panel, never a plain blur rectangle.
+ *
+ * The stack, in paint order:
+ *   1. body          a dark cool tint (carries contrast) with a milky white
+ *                    veil laid over it, the frost
+ *   2. backdrop      a generous blur plus saturation and a small brightness
+ *                    lift, so the scene reads as softly distorted colour
+ *   3. depth         inner light and shade spread down the face: bright at the
+ *                    top, a soft bounce along the bottom lip, faint inner
+ *                    falloff, the slab has thickness
+ *   4. reflections   two broad, low-opacity internal highlights (top-left and
+ *                    lower-right) as if light were passing through the glass
+ *   5. edge          a 1.6px conic lensing rim, bright where light hits
+ *   6. dispersion    a second, offset ring in warm orange and magenta, the
+ *                    chromatic fringe real glass throws at its edge
+ *   7. elevation     a tight contact shadow plus one wide, soft ambient shadow
+ *   8. specular      a pointer-tracked highlight (--mx / --my, see bootGlass)
+ *
+ * Variants change thickness and tint only, never the recipe:
+ *   .glass--deep   thicker slab for large panels
+ *   .glass--soft   thinner for chips and small fills
+ *   .glass--edge   extra-crisp rim (kept for existing markup)
+ *   .glass--travel hover sweep (work cards)
  */
 .glass {
   position: relative;
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0) 62%);
-  background-color: var(--glass-1);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(126%);
-  backdrop-filter: blur(var(--glass-blur)) saturate(126%);
-  border: 1px solid var(--glass-line);
-  border-radius: var(--r-l);
-  box-shadow:
-    inset 0 1px 0 var(--glass-hi),
-    inset 0 -1px 0 var(--glass-lo),
-    var(--shadow-2);
   isolation: isolate;
+  border: 0;
+  border-radius: var(--r-l);
+
+  --glass-b: 17px;                            /* frost depth */
+  --glass-tint: rgba(15, 14, 19, 0.25);       /* cool body, carries contrast */
+  --glass-milk: rgba(255, 255, 255, 0.055);   /* the frost itself */
+
+  background-color: var(--glass-tint);
+  background-image:
+    /* pointer specular */
+    radial-gradient(260px 180px at var(--mx, 50%) var(--my, -40%),
+      rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0) 62%),
+    /* internal reflections passing through the slab */
+    radial-gradient(70% 48% at 20% 0%, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0) 72%),
+    radial-gradient(88% 42% at 84% 104%, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0) 74%),
+    /* the milky frost, angled with the light */
+    linear-gradient(158deg,
+      var(--glass-milk) 0%,
+      rgba(255, 255, 255, 0.03) 46%,
+      rgba(255, 255, 255, 0.065) 100%);
+
+  -webkit-backdrop-filter: blur(var(--glass-b)) saturate(142%) brightness(1.06) contrast(1.02);
+  backdrop-filter: blur(var(--glass-b)) saturate(136%) brightness(1.10) contrast(1.03);
+
+  box-shadow:
+    /* --- thickness: light caught along the top edge, spilling down the face */
+    inset 0 1px 0 rgba(255, 255, 255, 0.30),
+    inset 0 3px 4px -2px rgba(255, 255, 255, 0.20),
+    inset 0 20px 34px -26px rgba(255, 255, 255, 0.30),
+    /* --- the lit bottom lip where light exits the slab */
+    inset 0 -2px 3px -1px rgba(255, 255, 255, 0.16),
+    inset 0 -22px 34px -26px rgba(255, 255, 255, 0.09),
+    /* --- faint inner falloff so the face is not flat */
+    inset 0 0 40px rgba(0, 0, 0, 0.13),
+    /* --- contact + ambient */
+    0 1px 2px rgba(0, 0, 0, 0.42),
+    0 26px 54px -30px rgba(0, 0, 0, 0.88);
+
+  transition: box-shadow 520ms var(--ease-out), transform 520ms var(--ease-out),
+              background-color 400ms var(--ease-out), backdrop-filter 400ms var(--ease-out);
 }
 
+/* edge: lensing rim with a faint chromatic fringe */
 .glass::before {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: var(--grad-sheen);
-  opacity: 0.85;
+  padding: 1.6px;
+  background:
+    conic-gradient(from 205deg at 50% 50%,
+      rgba(255, 255, 255, 0.52) 0deg,
+      rgba(255, 255, 255, 0.09) 52deg,
+      rgba(255, 255, 255, 0.015) 118deg,
+      rgba(255, 255, 255, 0.09) 196deg,
+      rgba(255, 255, 255, 0.40) 290deg,
+      rgba(255, 255, 255, 0.52) 360deg),
+    conic-gradient(from 232deg at 50% 50%,
+      rgba(255, 138, 61, 0.26) 0deg,
+      rgba(255, 255, 255, 0) 44deg,
+      rgba(255, 255, 255, 0) 226deg,
+      rgba(179, 36, 111, 0.26) 300deg,
+      rgba(255, 138, 61, 0.26) 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
   pointer-events: none;
-  z-index: -1;
 }
 
-.glass--deep { background-color: var(--glass-2); }
-.glass--soft { background-color: var(--glass-0); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), var(--shadow-1); }
+.glass--deep {
+  --glass-tint: rgba(16, 15, 20, 0.32);
+  --glass-milk: rgba(255, 255, 255, 0.05);
+  --glass-b: 19px;
+}
 
-/* 1px rim that reads as a polished chamfer */
+.glass--soft {
+  --glass-tint: rgba(16, 15, 20, 0.18);
+  --glass-milk: rgba(255, 255, 255, 0.07);
+  --glass-b: 13px;
+  border-radius: var(--r-m);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 2px 3px -1.5px rgba(255, 255, 255, 0.16),
+    inset 0 -1.5px 2px -1px rgba(255, 255, 255, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.36),
+    0 16px 32px -24px rgba(0, 0, 0, 0.82);
+}
+
+/* crisper rim for surfaces that carry small type */
 .glass--edge::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 44%, rgba(255, 255, 255, 0.05));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.19), rgba(255, 255, 255, 0) 46%, rgba(255, 255, 255, 0.07));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -352,9 +424,9 @@ p { text-wrap: pretty; }
 .glass--travel::after {
   content: "";
   position: absolute;
-  inset: -1px;
+  inset: 0;
   border-radius: inherit;
-  background: linear-gradient(115deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.07) 48%, rgba(255, 255, 255, 0) 58%);
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.08) 48%, rgba(255, 255, 255, 0) 58%);
   transform: translateX(-40%);
   opacity: 0;
   pointer-events: none;
@@ -363,13 +435,35 @@ p { text-wrap: pretty; }
 
 .glass--travel:hover::after { transform: translateX(40%); opacity: 1; }
 
+/* dynamic thickness: the slab deepens slightly as the pointer comes onto it */
+@media (hover: hover) and (pointer: fine) {
+  .glass:hover {
+    --glass-b: 21px;
+    --glass-tint: rgba(16, 15, 20, 0.29);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.34),
+      inset 0 3px 4px -2px rgba(255, 255, 255, 0.24),
+      inset 0 20px 34px -26px rgba(255, 255, 255, 0.34),
+      inset 0 -2px 3px -1px rgba(255, 255, 255, 0.19),
+      inset 0 -22px 34px -26px rgba(255, 255, 255, 0.11),
+      inset 0 0 44px rgba(0, 0, 0, 0.15),
+      0 2px 4px rgba(0, 0, 0, 0.46),
+      0 34px 70px -32px rgba(0, 0, 0, 0.92);
+  }
+}
+
+/* where frost cannot be computed, keep the slab readable but still layered */
 @supports not ((backdrop-filter: blur(6px)) or (-webkit-backdrop-filter: blur(6px))) {
-  .glass { background-color: rgba(13, 10, 15, 0.94); }
+  .glass {
+    background-color: rgba(21, 20, 26, 0.90);
+    background-image:
+      linear-gradient(158deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.035) 46%, rgba(255, 255, 255, 0.07) 100%);
+  }
 }
 
 @media (prefers-reduced-transparency: reduce) {
   .glass {
-    background-color: rgba(13, 10, 15, 0.97);
+    background-color: rgba(20, 19, 25, 0.96);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
