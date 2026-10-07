@@ -21,7 +21,7 @@
   /* ============================================================== 0. loader
      The reference portfolio's preloader, re-skinned to this theme: a full
      cover of the same black + bloom, the name ghosted then lit in the accent
-     gradient, and a hairline meter fed by the real frame stream — not a fake
+     gradient, and a hairline meter fed by the real frame stream , not a fake
      timer. It never gates the motion: the page unlocks as soon as there are
      enough frames to scrub smoothly (or the cap is reached). */
   function bootLoader() {
@@ -29,12 +29,17 @@
     const body = document.body;
     if (!el) { body.classList.remove("is-loading"); return; }
 
+    /* the projects page runs no avatar, so there is no stream to wait for:
+       it gets a short brand beat instead of the frame-driven meter */
+    const hasFrames = page === "index" && !!document.getElementById("hero-canvas");
+    if (!hasFrames) document.body.classList.add("no-frames");
+
     const total = (sequenceRef && sequenceRef.planSize()) || (NP.sequence && NP.sequence.count) || 300;
     const countEl = $(".loader__count b", el);
     const totalEl = $(".loader__count i", el);
 
-    const MIN = reduced ? 240 : 1150;         /* stay on screen at least */
-    const CAP = 7000;                         /* never hold the page longer */
+    const MIN = hasFrames ? (reduced ? 240 : 1150) : 520;   /* stay on screen at least */
+    const CAP = hasFrames ? 7000 : 900;                     /* never hold the page longer */
     const ENOUGH = Math.min(24, total);       /* frames needed to scrub */
     const started = performance.now();
     let done = false;
@@ -54,13 +59,22 @@
 
     function tick() {
       if (done) return;
+      const elapsed = performance.now() - started;
+
+      if (!hasFrames) {
+        /* time-driven fill for the no-avatar page */
+        el.style.setProperty("--load-p", Math.min(1, elapsed / MIN).toFixed(4));
+        if (elapsed >= MIN) finish();
+        else setTimeout(tick, 60);
+        return;
+      }
+
       const loaded = sequenceRef ? sequenceRef.loadedCount() : 0;
       const ratio = total ? Math.min(1, loaded / total) : 1;
 
       el.style.setProperty("--load-p", ratio.toFixed(4));
       if (countEl) countEl.textContent = String(Math.min(loaded, total)).padStart(3, "0");
 
-      const elapsed = performance.now() - started;
       const ready = loaded >= ENOUGH || body.classList.contains("no-seq");
       if ((elapsed >= MIN && ready) || elapsed >= CAP) finish();
       else setTimeout(tick, 90);
@@ -297,12 +311,14 @@
 
   /* ================================================ 7. the scroll motion */
   /**
-   * One fixed canvas, scrubbed by page scroll — the Drive starter's behaviour.
+   * One fixed canvas, scrubbed by page scroll, the Drive starter's behaviour.
    * No other animated artwork on the page: this is the single moving portrait.
    */
   function bootSequence() {
     const canvas = document.getElementById("hero-canvas");
-    if (!canvas) return;
+    /* The animated avatar lives on the home page only. The projects page has no
+       canvas at all, so nothing is loaded there: no frames, no HUD. */
+    if (!canvas || page !== "index") return;
 
     const seqCfg = NP.sequence;
     const budget = S.frameBudget();
@@ -486,6 +502,42 @@
     });
   }
 
+  /* ========================================================= 9b. liquid glass
+     One delegated listener feeds every .glass surface the pointer position, so
+     the specular highlight and the refraction follow the cursor the way a real
+     pane does. rAF-throttled, and skipped entirely for touch / reduced motion. */
+  function bootGlass() {
+    const sheets = $$(".glass");
+    if (!sheets.length) return;
+    if (reduced || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+
+    let current = null;
+    let x = 0, y = 0, queued = false;
+
+    function paint() {
+      queued = false;
+      if (!current) return;
+      current.style.setProperty("--mx", x.toFixed(1) + "px");
+      current.style.setProperty("--my", y.toFixed(1) + "px");
+    }
+
+    document.addEventListener("pointermove", function (e) {
+      const el = e.target && e.target.closest ? e.target.closest(".glass") : null;
+      if (!el) { if (current) { current.style.removeProperty("--mx"); current.style.removeProperty("--my"); current = null; } return; }
+      const r = el.getBoundingClientRect();
+      if (el !== current) { current = el; }
+      x = e.clientX - r.left;
+      y = e.clientY - r.top;
+      if (!queued) { queued = true; requestAnimationFrame(paint); }
+    }, { passive: true });
+
+    /* clear on touch scroll / window blur so a stale highlight never sticks */
+    window.addEventListener("blur", function () {
+      sheets.forEach(function (el) { el.style.removeProperty("--mx"); el.style.removeProperty("--my"); });
+      current = null;
+    });
+  }
+
   /* ======================================================= 10. boot it all */
   function boot() {
     bootSequence();          /* the frame budget must exist before the loader reads it */
@@ -500,6 +552,7 @@
     bootReveals();
     bootCounters();
     bootCursor();
+    bootGlass();
 
     if (page === "projects") bootProjects();
     else bootFlow();
