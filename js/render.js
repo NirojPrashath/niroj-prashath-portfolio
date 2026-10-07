@@ -22,7 +22,7 @@
 
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-  /** an ambulance corridor, drawn — stands in where no screenshot exists */
+  /** an ambulance corridor, drawn — stands in where no product screen exists */
   const ROUTE_MOTIF = '' +
     '<svg viewBox="0 0 640 400" fill="none" aria-hidden="true">' +
       '<defs>' +
@@ -105,17 +105,18 @@
     if (!p.image) {
       return '<div class="work-card__media work-card__media--motif">' +
           ROUTE_MOTIF +
-          '<span class="work-card__fallback">Concept visual · no screenshots</span>' +
+          '<span class="work-card__fallback">' + esc(p.short || p.title) + ' · concept visual</span>' +
         '</div>';
     }
     const wide = p.image;
     const card = p.imageCard || p.image;
+    const label = p.short || p.title;          // short project name, never the word "screenshot"
     return '<div class="work-card__media">' +
         '<img src="' + card + '" srcset="' + card + ' 900w, ' + wide + ' 1500w"' +
-        ' sizes="(max-width: 700px) 92vw, (max-width: 1000px) 46vw, 30vw"' +
-        ' alt="' + esc(p.imageAlt || p.title + ' screenshot') + '"' +
-        ' loading="lazy" decoding="async" width="1500" height="1000">' +
-        '<span class="chip chip--mono work-card__tag">Screenshot</span>' +
+        ' sizes="(max-width: 700px) 92vw, (max-width: 1000px) 46vw, (max-width: 1200px) 40vw, 30vw"' +
+        ' alt="' + esc(p.imageAlt || p.title) + '"' +
+        ' loading="lazy" decoding="async">' +
+        '<span class="chip chip--mono work-card__tag">' + esc(label) + '</span>' +
       '</div>';
   }
 
@@ -277,17 +278,18 @@
         '</div></div>' +
       '</div>';
 
+    const label = p.short || p.title;
     const media = p.image
       ? '<figure class="case__media">' +
-          '<img src="' + p.image + '" alt="' + esc(p.imageAlt || p.title + ' screenshot') + '"' +
+          '<img src="' + p.image + '" alt="' + esc(p.imageAlt || p.title) + '"' +
           ' loading="lazy" decoding="async" width="1500" height="1000">' +
-          '<figcaption><span class="chip chip--mono">Screenshot</span>' +
+          '<figcaption><span class="chip chip--mono">' + esc(label) + '</span>' +
           '<span class="case__media-note">' + esc(p.context) + '</span></figcaption>' +
         '</figure>'
       : '<figure class="case__media case__media--motif">' +
           ROUTE_MOTIF +
-          '<figcaption><span class="chip chip--mono">Concept visual</span>' +
-          '<span class="case__media-note">No screenshots captured for this concept</span></figcaption>' +
+          '<figcaption><span class="chip chip--mono">' + esc(label) + '</span>' +
+          '<span class="case__media-note">Concept study — no product build</span></figcaption>' +
         '</figure>';
 
     return '' +
